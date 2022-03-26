@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.13.3",
+    "lightweight-charts": "^3.8.0",
     "quasar": "^2.6.1",
     "vue": "^3.2.25"
   },
