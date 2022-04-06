@@ -7,7 +7,7 @@
 
     <template v-slot:before >
       <q-resize-observer @resize="onResize"/>
-      <div class="q-pa-md" style="max-height: 40vh;" ref="chartContainer">
+      <div class="q-pa-md full-width full-height" style="" ref="chartContainer">
         <div class="text-h4 q-mb-md" ref="chartRef">
         </div>
       </div>
@@ -88,7 +88,7 @@ export default {
       socket.onmessage = function (event) {
         const data = JSON.parse(event.data);
         const message = data[0]["msg"];
-
+        console.log(message);
         data.forEach(d => {
           processData(d);
         })

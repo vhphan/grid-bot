@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.13.3",
+    "ccxt": "^1.77.79",
+    "dotenv": "^16.0.0",
     "lightweight-charts": "^3.8.0",
     "quasar": "^2.6.1",
     "vue": "^3.2.25"
