@@ -60,6 +60,9 @@
     </template>
     <template v-slot:after>
 
+<!--      TODO: Open and closed orders info here -->
+      
+
     </template>
 
   </q-splitter>

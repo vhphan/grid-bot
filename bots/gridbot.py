@@ -1,4 +1,5 @@
 # %%
+import json
 import math
 import sys
 import time
@@ -7,6 +8,7 @@ import ccxt
 from dotenv import dotenv_values
 from loguru import logger
 from retry import retry
+import websocket
 
 # %%
 config = dotenv_values(".env")
@@ -26,7 +28,7 @@ CHECK_ORDERS_FREQUENCY = int(config["CHECK_ORDERS_FREQUENCY"])
 
 
 class GridBot:
-    def __init__(self):
+    def __init__(self, web_socket_url=None):
         self.exchange = ccxt.binance({
             'apiKey': API_KEY,
             'secret': API_SECRET,
@@ -38,8 +40,14 @@ class GridBot:
         self.portfolio_value = self.quote_balance * self.ticker['last'] + self.base_balance
         self.buy_orders = []
         self.sell_orders = []
+        self.closed_orders = []
         self.closed_order_ids = []
         self.initial_portfolio_value = self.portfolio_value
+        if web_socket_url is not None:
+            self.ws = websocket.WebSocketApp(web_socket_url)
+            self.ws.run_forever()
+        else:
+            self.ws = None
 
     def get_portfolio_value(self):
         ticker = self.exchange.fetch_ticker(config['SYMBOL'])
@@ -76,13 +84,22 @@ class GridBot:
     def run_bot(self):
         self.create_initial_grid_orders()
         while True:
+            # concatenate 3 order lists and send as jsonified string
+            if self.ws:
+                self.ws.send(json.dumps(self.buy_orders + self.sell_orders + self.closed_orders))
+
             for mode in ['buy', 'sell']:
+
                 grid_size_multiplier = 1 if mode == 'buy' else -1
                 orders_list = self.buy_orders if mode == 'buy' else self.sell_orders
+
                 for order in orders_list:
+
                     order = self.fetch_order_info(order)
                     order_info = order['info']
+
                     if order_info['status'] == CLOSED_ORDER_STATUS:
+                        self.closed_orders.append(order_info)
                         self.closed_order_ids.append(order_info['id'])
                         logger.info(f"{mode} order executed at {order_info['price']}")
 
