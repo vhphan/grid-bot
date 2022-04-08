@@ -8,6 +8,7 @@ from dotenv import dotenv_values
 from loguru import logger
 from retry import retry
 
+# %%
 config = dotenv_values(".env")
 
 NUM_BUY_GRID_LINES = int(config["NUM_BUY_GRID_LINES"])
