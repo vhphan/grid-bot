@@ -1,5 +1,4 @@
 import {createChart, CrosshairMode} from "lightweight-charts";
-import {ref} from "vue";
 
 export const useCandleChart = () => {
     return async function (chartRef, start) {
@@ -35,7 +34,7 @@ export const useCandleChart = () => {
             start;
         const apiKey = import.meta.env.VITE_API_KEY
         const apiSecret = import.meta.env.VITE_API_SECRET
-        let currentBar = {};
+        let currentBar;
         const r = await fetch(barsUrl, {
             headers: {
                 "APCA-API-KEY-ID": apiKey,
@@ -55,6 +54,4 @@ export const useCandleChart = () => {
         candleSeries.setData(data);
         return {chart, candleSeries, currentBar};
     }
-
-
-};
+}

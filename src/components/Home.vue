@@ -1,6 +1,4 @@
 <template>
-
-
   <q-splitter
       v-model="sideModel"
       width="300"
@@ -60,20 +58,27 @@
     </template>
     <template v-slot:after>
 
-<!--      TODO: Open and closed orders info here -->
-      
+      <q-table
+          :rows="openOrders"
+          :pagination="{rowsPerPage: 8}"
+          dense
+          dark
+      ></q-table>
+      <q-table
+          :rows="closedOrders"
+          :pagination="{rowsPerPage: 8}"
+          dense
+          dark
+      ></q-table>
 
     </template>
 
   </q-splitter>
-
-
 </template>
 
-
 <script>
-import {computed, onMounted, ref, watch} from 'vue'
-import {createChart, CrosshairMode} from "lightweight-charts";
+import {computed, onMounted, ref} from 'vue'
+import {LineStyle} from "lightweight-charts";
 import {useCandleChart} from "../composables/candleSticks";
 import {useQuasar} from "quasar";
 
@@ -87,7 +92,6 @@ export default {
     const auth = {"action": "auth", "key": apiKey, "secret": apiSecret};
     const subscribe = {"action": "subscribe", "trades": ["ETHUSD"], "quotes": ["ETHUSD"], "bars": ["ETHUSD"]}
     const url = "wss://stream.data.alpaca.markets/v1beta1/crypto";
-    let socket;
 
     const quotes = ref([]);
     const trades = ref([]);
@@ -100,85 +104,64 @@ export default {
     const myCandleChart = useCandleChart();
 
     let chart, candleSeries, currentBar;
-
-    onMounted(async () => {
-
-      const obj = await myCandleChart(chartRef.value, start);
-      chart = obj.chart;
-      candleSeries = obj.candleSeries;
-      currentBar = obj.currentBar;
-
-      const createSocket = function () {
-        socket = new WebSocket(url);
-        socket.onmessage = function (event) {
-          const data = JSON.parse(event.data);
-          console.log(data);
-          const message = data[0]["msg"];
-          console.log(message);
+    let socket;
+    const createSocket = function () {
+      socket = new WebSocket(url);
+      socket.onmessage = function (event) {
+        const data = JSON.parse(event.data);
+        console.log(data);
+        const message = data[0]["msg"];
+        console.log(message);
 
 
-          data.forEach(d => {
-            processData(d);
-          });
+        data.forEach(d => {
+          processData(d);
+        });
 
-          if (message === 'auth timeout') {
-            $q.notify({
-              message: 'Authentication timeout. Retrying in 5 sec...',
-              color: 'negative',
-              icon: 'error',
-              position: 'top'
-            })
-
-          }
-
-          if (message === "connected") {
-            $q.notify({
-              message: 'Socket is connected....',
-              color: 'positive',
-              icon: 'done',
-              position: 'top'
-            })
-
-            console.log("do authentication");
-            socket.send(JSON.stringify(auth));
-          }
-
-          if (message === "authenticated") {
-            $q.notify({
-              message: 'Socket is authenticated....',
-              color: 'positive',
-              icon: 'done',
-              position: 'top'
-            })
-            socket.send(JSON.stringify(subscribe));
-          }
-        }
-        socket.onclose = () => {
-          socket = null;
+        if (message === 'auth timeout') {
           $q.notify({
-            message: 'Socket closed',
-            color: 'red',
+            message: 'Authentication timeout. Retrying in 5 sec...',
+            color: 'negative',
             icon: 'error',
-            position: 'top',
-            timeout: 2000
+            position: 'top'
           })
-          setTimeout(createSocket, 5000)
-        };
-      };
 
-      createSocket();
+        }
 
-      if (chart) {
-        chart.resize(chartContainer.value.offsetWidth, chartContainer.value.offsetHeight - 40);
+        if (message === "connected") {
+          $q.notify({
+            message: 'Socket is connected....',
+            color: 'positive',
+            icon: 'done',
+            position: 'top'
+          })
+
+          console.log("do authentication");
+          socket.send(JSON.stringify(auth));
+        }
+
+        if (message === "authenticated") {
+          $q.notify({
+            message: 'Socket is authenticated....',
+            color: 'positive',
+            icon: 'done',
+            position: 'top'
+          })
+          socket.send(JSON.stringify(subscribe));
+        }
       }
-
-      // setTimeout(() => {
-      //   console.log(chartContainer.value.offsetWidth);
-      //   chart.resize(chartContainer.value.offsetWidth, chartContainer.value.offsetHeight - 40);
-      // }, 5000);
-
-    })
-
+      socket.onclose = () => {
+        socket = null;
+        $q.notify({
+          message: 'Socket closed',
+          color: 'red',
+          icon: 'error',
+          position: 'top',
+          timeout: 2000
+        })
+        setTimeout(createSocket, 5000)
+      };
+    };
 
     const processData = (bar) => {
       if (!bar.T) return;
@@ -235,6 +218,74 @@ export default {
       chart.resize(size.width, size.height - 40);
     }
 
+    const priceLines = [];
+    const openOrders = ref([]);
+    const closedOrders = ref([]);
+    let orderSocket;
+
+    function processOrderData(order) {
+
+      const {id, side, price, status} = order;
+      openOrders.value = [];
+      closedOrders.value = [];
+      if (status === 'closed') {
+        closedOrders.value.push({id, side, price, status});
+      } else {
+        openOrders.value.push({id, side, price, status});
+        let priceLine = {
+          price: order.price,
+          color: side === 'buy' ? '#00ff00' : '#ff0000',
+          lineWidth: 2,
+          lineVisible: true,
+          lineStyle: LineStyle.Solid,
+          axisLabelVisible: true,
+          title: order.side
+        };
+        let line = candleSeries.createPriceLine(priceLine);
+        priceLines.push(line);
+      }
+
+    }
+
+    const createOrderSocket = function () {
+      orderSocket = new WebSocket("ws://localhost:9001");
+      orderSocket.onmessage = function (event) {
+        try {
+          let orderData = JSON.parse(event.data);
+          priceLines.forEach(priceLine => candleSeries.removePriceLine(priceLine));
+          orderData.forEach(order => {
+            processOrderData(order);
+          });
+        } catch (e) {
+          console.log(e);
+          $q.notify({
+            message: 'Error processing order data',
+            color: 'red',
+            icon: 'error',
+            position: 'top',
+            timeout: 2000
+          })
+        }
+      }
+    };
+    createOrderSocket()
+
+    onMounted(async () => {
+
+      const obj = await myCandleChart(chartRef.value, start);
+      chart = obj.chart;
+      candleSeries = obj.candleSeries;
+      currentBar = obj.currentBar;
+
+      createSocket();
+
+      if (chart) {
+        chart.resize(chartContainer.value.offsetWidth, chartContainer.value.offsetHeight - 40);
+      }
+
+    })
+
+
     return {
       sideModel: ref(70),
       splitterModel: ref(50),
@@ -245,8 +296,9 @@ export default {
       latestBar,
       chartRef,
       onResize,
-      chartContainer
-
+      chartContainer,
+      closedOrders,
+      openOrders
     }
   }
 }
