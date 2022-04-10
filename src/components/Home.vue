@@ -88,9 +88,10 @@ export default {
     const $q = useQuasar()
     const apiKey = import.meta.env.VITE_API_KEY
     const apiSecret = import.meta.env.VITE_API_SECRET
+    const symbol =  import.meta.env.VITE_SYMBOL
 
     const auth = {"action": "auth", "key": apiKey, "secret": apiSecret};
-    const subscribe = {"action": "subscribe", "trades": ["ETHUSD"], "quotes": ["ETHUSD"], "bars": ["ETHUSD"]}
+    const subscribe = {"action": "subscribe", "trades": [symbol], "quotes": [symbol], "bars": [symbol]}
     const url = "wss://stream.data.alpaca.markets/v1beta1/crypto";
 
     const quotes = ref([]);
@@ -101,7 +102,7 @@ export default {
     const chartRef = ref(null);
     const chartContainer = ref(null);
     const start = new Date(Date.now() - 7200 * 1000).toISOString();
-    const myCandleChart = useCandleChart();
+    const myCandleChart = useCandleChart(symbol);
 
     let chart, candleSeries, currentBar;
     let socket;
@@ -221,11 +222,13 @@ export default {
     const priceLines = [];
     const openOrders = ref([]);
     const closedOrders = ref([]);
+    const logList = ref([]);
     let orderSocket;
 
     function processOrderData(order) {
 
-      const {id, side, price, status} = order;
+      const {id, side, price, status, fee} = order;
+      const cost = `${fee.cost} ${fee.currency}`;
       openOrders.value = [];
       closedOrders.value = [];
       if (status === 'closed') {
@@ -251,11 +254,22 @@ export default {
       orderSocket = new WebSocket("ws://localhost:9001");
       orderSocket.onmessage = function (event) {
         try {
-          let orderData = JSON.parse(event.data);
-          priceLines.forEach(priceLine => candleSeries.removePriceLine(priceLine));
-          orderData.forEach(order => {
-            processOrderData(order);
-          });
+
+          let socketData = JSON.parse(event.data);
+          if (socketData.type === 'order') {
+            const orderData = socketData.data;
+            priceLines.forEach(priceLine => candleSeries.removePriceLine(priceLine));
+            orderData.forEach(order => {
+              processOrderData(order);
+            });
+          }
+
+          if (socketData.type === 'logs') {
+            logList.value = socketData.data;
+            console.log(socketData.data);
+          }
+
+
         } catch (e) {
           console.log(e);
           $q.notify({
@@ -298,7 +312,8 @@ export default {
       onResize,
       chartContainer,
       closedOrders,
-      openOrders
+      openOrders,
+      logList,
     }
   }
 }

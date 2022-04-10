@@ -1,6 +1,6 @@
 import {createChart, CrosshairMode} from "lightweight-charts";
 
-export const useCandleChart = () => {
+export const useCandleChart = (symbol) => {
     return async function (chartRef, start) {
         const chart = createChart(chartRef, {
             width: 700,
@@ -30,8 +30,7 @@ export const useCandleChart = () => {
         });
         const candleSeries = chart.addCandlestickSeries();
         const barsUrl =
-            "https://data.alpaca.markets/v1beta1/crypto/ETHUSD/bars?exchanges=CBSE&timeframe=1Min&start=" +
-            start;
+            `https://data.alpaca.markets/v1beta1/crypto/${symbol}/bars?exchanges=CBSE&timeframe=1Min&start=${start}`;
         const apiKey = import.meta.env.VITE_API_KEY
         const apiSecret = import.meta.env.VITE_API_SECRET
         let currentBar;
