@@ -9,7 +9,7 @@
           <q-avatar>
             <q-icon name="insights"/>
           </q-avatar>
-          Title
+          Grid Bot Project: {{ symbol }}
         </q-toolbar-title>
 
         <q-tabs align="left">
@@ -26,14 +26,14 @@
       drawer
     </q-drawer>
 
-<!--    <q-drawer-->
-<!--        v-model="rightDrawerOpen"-->
-<!--        side="right"-->
-<!--        bordered-->
-<!--        :width="500"-->
-<!--    >-->
-<!--      right drawer-->
-<!--    </q-drawer>-->
+    <!--    <q-drawer-->
+    <!--        v-model="rightDrawerOpen"-->
+    <!--        side="right"-->
+    <!--        bordered-->
+    <!--        :width="500"-->
+    <!--    >-->
+    <!--      right drawer-->
+    <!--    </q-drawer>-->
 
     <q-page-container>
       <home/>
@@ -52,8 +52,9 @@ export default {
   setup() {
     const leftDrawerOpen = ref(false)
     const rightDrawerOpen = ref(true)
-
+    const symbol = import.meta.env.VITE_SYMBOL;
     return {
+      symbol,
       leftDrawerOpen,
       toggleLeftDrawer() {
         leftDrawerOpen.value = !leftDrawerOpen.value

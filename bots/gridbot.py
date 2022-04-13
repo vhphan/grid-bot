@@ -50,12 +50,14 @@ class GridBot:
         self.errors = []
         self.initial_portfolio_value = self.portfolio_value
         if web_socket_url is not None:
-            self.ws = websocket.WebSocketApp(web_socket_url)
-            self.ws.run_forever()
+            self.ws = websocket.WebSocket()
+            self.ws.connect(web_socket_url)
         else:
             self.ws = None
         self.log_filename = f"logs/gridbot_{SYMBOL}_{dt.strftime(dt.now(), '%Y%m%d_%H%M%S')}.log"
-        logger.add(f'logs/{self.log_filename}', rotation='1 MB', level='DEBUG')
+        logger.add(f'{self.log_filename}', rotation='1 MB', level='DEBUG')
+        logger.info(f"Starting GridBot for {SYMBOL}")
+        self.min_notional = self.get_min_notional()
 
     def get_min_notional(self):
         try:
@@ -78,6 +80,9 @@ class GridBot:
         for order in self.buy_orders + self.sell_orders:
             self.exchange.cancel_order(order['id'], config['SYMBOL'])
             logger.info(f"Cancelled order {order['id']}")
+
+    def __enter__(self):
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.cancel_all_orders()
@@ -106,18 +111,33 @@ class GridBot:
             for i in range(1, grid_lines + 1):
                 price = self.ticker['bid'] + grid_size_multiplier * GRID_SIZE * i
                 try:
+
+                    if mode == 'buy':
+                        if POSITION_SIZE * price < float(self.min_notional):
+                            logger.warning('POSITION_SIZE * price < min_notional')
+                            logger.info(f"Skipping {mode} order for {price}")
+                            continue
+
                     order = self.exchange.create_limit_order(SYMBOL, mode, POSITION_SIZE, price)
                     orders_list.append(order)
-                except ccxt.base.errors.InvalidOrder as e:
+                    logger.info(f"Created {mode} order for {price}")
+
+                except Exception as e:
                     logger.error(f"Invalid order: {e}")
                     raise e
+
+    def get_kline(self):
+        kline = self.exchange.fetch_ohlcv(SYMBOL, '1m')
+        if self.ws:
+            self.ws.send({'data': json.dumps(kline), 'type': 'kline'})
+        return kline
 
     def run_bot(self):
         self.create_initial_order()
         self.create_initial_grid_orders()
         while True:
-            # concatenate 3 order lists and send as jsonified string
             if self.ws:
+                # concatenate 3 order lists and send as jsonified string
                 self.ws.send(json.dumps(
                     {'data': self.buy_orders + self.sell_orders + self.closed_orders,
                      'type': 'orders'})
@@ -133,7 +153,7 @@ class GridBot:
 
                 for order in orders_list:
 
-                    order = self.fetch_order_info(order)
+                    order = self.exchange.fetch_order(id=order['id'], symbol=SYMBOL)
                     order_info = order['info']
 
                     if order_info['status'] == CLOSED_ORDER_STATUS:
@@ -158,13 +178,21 @@ class GridBot:
 
             if len(self.sell_orders) == 0:
                 logger.info(f"current portfolio value: {self.get_portfolio_value()}")
-                sys.exit("stopping bot, nothing left to sell")
+                # sys.exit("stopping bot, nothing left to sell")
+                logger.info("stopping bot, nothing left to sell")
+                self.__exit__(0, 0, None)
 
-    @retry(tries=3, delay=CHECK_ORDERS_FREQUENCY, logger=logger)
-    def fetch_order_info(self, order):
-        return self.exchange.fetch_order(order['id'], config['SYMBOL'])
+
+@retry(tries=3, delay=CHECK_ORDERS_FREQUENCY, logger=logger)
+def fetch_order_info(self, order):
+    return self.exchange.fetch_order(order['id'], config['SYMBOL'])
 
 
 if __name__ == '__main__':
-    bot = GridBot()
-    # bot.run_bot()
+    web_socket_url = 'ws://localhost:9001'
+    with GridBot(web_socket_url=web_socket_url) as bot:
+        bot.run_bot()
+
+
+
+

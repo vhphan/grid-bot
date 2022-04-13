@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sandbox</title>
+</head>
+<body>
+<h3>Sandbox</h3>
+
+<script>
+    // URL connection
+    // const conn = new WebSocket("wss://stream.binance.com:9443/ws/adausdt@kline_1m");
+    //
+    // conn.onmessage = function(evt) {
+    //     console.log(evt.data);
+    // }
+    //
+
+    // (async () => {
+    //     const klineUrl = 'https://api.binance.com/api/v3/klines?symbol=ADAUSDT&interval=1m&limit=500';
+    //     const response = await fetch(klineUrl);
+    //     const klines = await response.json();
+    //     // console.log(klines);
+    //     // klines.forEach(kline => {
+    //     //     const t= new Date(kline[0]*1000);
+    //     //     console.log(t.toLocaleString());
+    //     // });
+    //
+    //     const lastT = klines[klines.length-1][0];
+    //     const lastTimestamp = new Date(lastT);
+    //     console.log(lastT);
+    //     console.log(lastTimestamp);
+    //     console.log(Date.parse(lastTimestamp));
+    //     console.log(klines[klines.length-1]);
+    //
+    // })()
+
+    (async () => {
+        const symbol = 'adausdt';
+        const url = 'wss://stream.binance.com:9443';
+        // const streams = 'stream?streams=<streamName1>/<streamName2>/<streamName3>'
+        const streams = `ws/${symbol}@kline_5m/${symbol}@trade/${symbol}@depth@1000ms`;
+        const socket = new WebSocket(url + '/' + streams);
+        console.log(socket);
+        socket.onmessage = function (evt) {
+            console.log(evt)
+            console.log(evt.data);
+        }
+        setTimeout(()=>socket.close(), 60_000)
+    })();
+
+
+</script>
+</body>
+</html>
