@@ -31,6 +31,7 @@
               <template v-slot:before>
 
                 <q-table
+                    title="Quotes"
                     :rows="quotes.slice(-numOfRows)"
                     :pagination="{rowsPerPage: numOfRows}"
                     dense
@@ -40,6 +41,7 @@
               </template>
               <template v-slot:after>
                 <q-table
+                    title="Trades"
                     :rows="trades.slice(-numOfRows)"
                     :pagination="{rowsPerPage: numOfRows}"
                     dense
@@ -59,6 +61,7 @@
     <template v-slot:after>
 
       <q-table
+          title="Open Orders"
           :rows="openOrders.slice(-numOfRows)"
           :pagination="{rowsPerPage: numOfRows}"
           dense
@@ -89,6 +92,7 @@
 
       </q-table>
       <q-table
+          title="Closed Orders"
           :rows="closedOrders.slice(-numOfRows)"
           :pagination="{rowsPerPage: numOfRows}"
           dense
