@@ -63,13 +63,53 @@
           :pagination="{rowsPerPage: numOfRows}"
           dense
           dark
-      ></q-table>
+          class="q-ma-xs"
+      >
+        <template v-slot:body="props">
+          <q-tr :props="props" :class="(props.row.side==='buy')?'bg-black text-green':'bg-black text-red'">
+
+
+            <q-td key="id" :props="props">
+              {{ props.row.id }}
+            </q-td>
+
+            <q-td key="side" :props="props">
+              {{ props.row.side }}
+            </q-td>
+
+            <q-td key="price" :props="props">
+              {{ props.row.price }}
+            </q-td>
+
+            <q-td key="status" :props="props">
+              {{ props.row.status }}
+            </q-td>
+          </q-tr>
+        </template>
+
+      </q-table>
       <q-table
           :rows="closedOrders.slice(-numOfRows)"
           :pagination="{rowsPerPage: numOfRows}"
           dense
           dark
+          class="q-ma-xs"
       ></q-table>
+
+      <q-separator/>
+
+      <q-list
+          dense
+          class="q-ma-xs bg-black"
+          bordered
+          dark
+      >
+        <q-item-section class="text-h6">Bot Logs</q-item-section>
+        <q-separator dark/>
+        <q-item v-for="item in logList.slice(-numOfRows)">
+          {{ item }}
+        </q-item>
+      </q-list>
 
     </template>
 
@@ -114,11 +154,9 @@ export default {
     let orderSocket;
 
     function processOrderData(order) {
-
       const {id, side, price, status, fee} = order;
-      const cost = `${fee.cost} ${fee.currency}`;
-      openOrders.value = [];
-      closedOrders.value = [];
+      console.log({id, side, price, status});
+
       if (status === 'closed') {
         closedOrders.value.push({id, side, price, status});
       } else {
@@ -132,10 +170,10 @@ export default {
           axisLabelVisible: true,
           title: order.side
         };
+        console.log(candleSeries);
         let line = candleSeries.createPriceLine(priceLine);
         priceLines.push(line);
       }
-
     }
 
     const createOrderSocket = function () {
@@ -159,24 +197,28 @@ export default {
         try {
           console.log(event);
           let socketData = JSON.parse(event.data);
-          if (socketData.type === 'order') {
+          if (socketData.type === 'orders') {
             const orderData = socketData.data;
             priceLines.forEach(priceLine => candleSeries.removePriceLine(priceLine));
+            openOrders.value = [];
+            closedOrders.value = [];
             orderData.forEach(order => {
               processOrderData(order);
             });
+
           }
 
           if (socketData.type === 'logs') {
             logData.value = socketData.data;
-            console.log(socketData.data);
+            console.log(logData.value);
           }
         } catch (e) {
           console.log(e);
-          console.log(event);
+          console.log(event.data);
+          console.log(JSON.parse(event.data.data));
 
           $q.notify({
-            message: 'Error processing order data.',
+            message: 'Error processing order socket data.',
             color: 'red',
             icon: 'error',
             position: 'top',
@@ -195,19 +237,20 @@ export default {
       currentBar = obj.currentBar;
 
       let marketSocket = createSocket(candleSeries, currentBar);
+
       console.log(marketSocket);
-      // try {
-      //   createOrderSocket()
-      // } catch (e) {
-      //   console.log(e);
-      //   $q.notify({
-      //     message: 'Error creating order socket',
-      //     color: 'red',
-      //     icon: 'error',
-      //     position: 'top',
-      //     timeout: 2000
-      //   })
-      // }
+      try {
+        createOrderSocket()
+      } catch (e) {
+        console.log(e);
+        $q.notify({
+          message: 'Error creating order socket',
+          color: 'red',
+          icon: 'error',
+          position: 'top',
+          timeout: 2000
+        })
+      }
       if (chart) {
         chart.resize(chartContainer.value.offsetWidth - 40, chartContainer.value.offsetHeight - 40);
       }

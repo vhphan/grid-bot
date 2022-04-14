@@ -32,7 +32,6 @@ async function barData(symbol, start, candleSeries, api) {
             }
         });
         const response = await r.json();
-        console.log(response);
         data = response.bars.map((bar) => ({
             open: bar.o,
             high: bar.h,
@@ -44,7 +43,6 @@ async function barData(symbol, start, candleSeries, api) {
 
 
     const currentBar = data[data.length - 1];
-    console.log(data);
     candleSeries.setData(data);
     return currentBar;
 }

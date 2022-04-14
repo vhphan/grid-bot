@@ -70,11 +70,8 @@ export const useAlpaca = function (symbol) {
         let marketDataSocket = new WebSocket(url);
 
         marketDataSocket.onmessage = function (event) {
-            console.log(event);
             const data = JSON.parse(event.data);
-            console.log(data);
             const message = data[0]["msg"];
-            console.log(message);
 
             data.forEach(d => {
                 processData(d);
@@ -142,9 +139,7 @@ export const useBinance = function (symbol) {
         const createSocket = function (candleSeries, currentBar) {
 
             let marketDataSocket = new WebSocket(url + '/' + streams);
-            console.log(marketDataSocket);
             marketDataSocket.onmessage = function (event) {
-                console.log(event.data);
                 const data = JSON.parse(event.data);
                 const messageType = data.e;
                 switch (messageType) {

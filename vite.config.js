@@ -5,7 +5,7 @@ import {quasar, transformAssetUrls} from '@quasar/vite-plugin'
 // https://vitejs.dev/config/
 export default defineConfig({
     server: {
-        port: 3010,
+        port: process.env.VITE_PORT || 3003,
     },
     plugins: [
 
@@ -16,7 +16,5 @@ export default defineConfig({
         quasar({
             sassVariables: 'src/quasar-variables.sass'
         }),
-
-
     ]
 })
