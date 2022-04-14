@@ -130,94 +130,92 @@ export const useAlpaca = function (symbol) {
     return {quotes, trades, bars, createSocket};
 };
 
-export const useBinance = function (symbol) {
-        const url = 'wss://stream.binance.com:9443';
-        const streams = `ws/${symbol}@kline_5m/${symbol}@trade/${symbol}@depth@1000ms`;
-        const quotes = ref([]);
-        const trades = ref([]);
-        const bars = ref([]);
-        const createSocket = function (candleSeries, currentBar) {
+export const useBinance = (symbol) => {
+    const url = 'wss://stream.binance.com:9443';
+    const streams = `ws/${symbol}@kline_5m/${symbol}@trade/${symbol}@depth@1000ms`;
+    const quotes = ref([]);
+    const trades = ref([]);
+    const bars = ref([]);
+    const createSocket = function (candleSeries, currentBar) {
 
-            let marketDataSocket = new WebSocket(url + '/' + streams);
-            marketDataSocket.onmessage = function (event) {
-                const data = JSON.parse(event.data);
-                const messageType = data.e;
-                switch (messageType) {
-                    case 'kline':
-                        const bar = {
-                            t: data.k.t,
-                            o: data.k.o,
-                            h: data.k.h,
-                            l: data.k.l,
-                            c: data.k.c,
-                            v: data.k.v,
+        let marketDataSocket = new WebSocket(url + '/' + streams);
+        marketDataSocket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            const messageType = data.e;
+            switch (messageType) {
+                case 'kline':
+                    const bar = {
+                        t: data.k.t,
+                        o: data.k.o,
+                        h: data.k.h,
+                        l: data.k.l,
+                        c: data.k.c,
+                        v: data.k.v,
+                    };
+                    bars.value.push(bar);
+                    if (bars.value.length > 1000) bars.value.shift();
+
+                    const timestamp = bar.t / 1000;
+
+                    currentBar = {
+                        time: timestamp,
+                        open: bar.o,
+                        high: bar.h,
+                        low: bar.l,
+                        close: bar.c,
+                    };
+
+                    candleSeries.update(currentBar);
+                    break;
+
+                case 'trade':
+                    const trade = {
+                        time: new Date(parseFloat(data.T)).toLocaleString(),
+                        price: data.p,
+                        quantity: data.q,
+                    };
+                    trades.value.push(trade);
+                    if (trades.value.length > 1000) trades.value.shift();
+                    break;
+
+                case 'depthUpdate':
+
+                    if (!data.b && !data.a) break;
+                    if (!data.b.length && !data.a.length) break;
+
+                    let bidsArray = data.b.map(bid => {
+                        return {
+                            bid: bid[0],
+                            bidSize: parseFloat(bid[1]).toFixed(3),
                         };
-                        bars.value.push(bar);
-                        if (bars.value.length > 1000) bars.value.shift();
-
-                        const timestamp = bar.t / 1000;
-
-                        currentBar = {
-                            time: timestamp,
-                            open: bar.o,
-                            high: bar.h,
-                            low: bar.l,
-                            close: bar.c,
-                        };
-
-                        candleSeries.update(currentBar);
-                        break;
-
-                    case 'trade':
-                        const trade = {
-                            time: new Date(parseFloat(data.T)).toLocaleString(),
-                            price: data.p,
-                            quantity: data.q,
-                        };
-                        trades.value.push(trade);
-                        if (trades.value.length > 1000) trades.value.shift();
-                        break;
-
-                    case 'depthUpdate':
-
-                        if (!data.b && !data.a) break;
-                        if (!data.b.length && !data.a.length) break;
-
-                        let bidsArray = data.b.map(bid => {
-                            return {
-                                bid: bid[0],
-                                bidSize: parseFloat(bid[1]).toFixed(3),
-                            };
-                        });
-                        let asksArray = data.a.map(ask => {
-                            return {
-                                ask: ask[0],
-                                askSize: parseFloat(ask[1]).toFixed(3),
-                            }
-                        });
-                        let maxArrayLength = Math.max(bidsArray.length, asksArray.length);
-
-                        for (let i = 0; i < maxArrayLength; i++) {
-                            if (bidsArray[i]) {
-                                quotes.value.push({
-                                    time: new Date(parseFloat(data.E)).toLocaleString(),
-                                    bid: bidsArray[i]?.bid,
-                                    bidSize: bidsArray[i]?.bidSize,
-                                    ask: asksArray[i]?.ask,
-                                    askSize: asksArray[i]?.askSize,
-                                });
-                            }
+                    });
+                    let asksArray = data.a.map(ask => {
+                        return {
+                            ask: ask[0],
+                            askSize: parseFloat(ask[1]).toFixed(3),
                         }
-                        while (quotes.value.length > 1000) {
-                            quotes.value.shift();
+                    });
+                    let maxArrayLength = Math.max(bidsArray.length, asksArray.length);
+
+                    for (let i = 0; i < maxArrayLength; i++) {
+                        if (bidsArray[i]) {
+                            quotes.value.push({
+                                time: new Date(parseFloat(data.E)).toLocaleString(),
+                                bid: bidsArray[i]?.bid,
+                                bidSize: bidsArray[i]?.bidSize,
+                                ask: asksArray[i]?.ask,
+                                askSize: asksArray[i]?.askSize,
+                            });
                         }
-                        break;
-                }
-            };
+                    }
+                    while (quotes.value.length > 1000) {
+                        quotes.value.shift();
+                    }
+                    break;
+            }
+        };
 
-            return marketDataSocket;
-        }
-        return {quotes, trades, bars, createSocket};
-
+        return marketDataSocket;
     }
-;
+    return {quotes, trades, bars, createSocket};
+}
