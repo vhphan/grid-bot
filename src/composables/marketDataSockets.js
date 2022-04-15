@@ -130,7 +130,7 @@ export const useAlpaca = function (symbol) {
     return {quotes, trades, bars, createSocket};
 };
 
-export const useBinance = (symbol) => {
+export const useBinance = function (symbol) {
     const url = 'wss://stream.binance.com:9443';
     const streams = `ws/${symbol}@kline_5m/${symbol}@trade/${symbol}@depth@1000ms`;
     const quotes = ref([]);
@@ -218,4 +218,4 @@ export const useBinance = (symbol) => {
         return marketDataSocket;
     }
     return {quotes, trades, bars, createSocket};
-}
+};
