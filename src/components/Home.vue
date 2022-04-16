@@ -223,7 +223,6 @@ export default {
         } catch (e) {
           console.log(e);
           console.log(event.data);
-          console.log(JSON.parse(event.data.data));
 
           $q.notify({
             message: 'Error processing order socket data.',

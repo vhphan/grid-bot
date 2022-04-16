@@ -1,16 +1,15 @@
 # %%
-import datetime
-from datetime import datetime as dt
 import json
 import math
 import sys
 import time
+from datetime import datetime as dt
 
 import ccxt
+import websocket
 from dotenv import dotenv_values
 from loguru import logger
 from retry import retry
-import websocket
 
 # %%
 from bots.utils import read_last_n_lines
