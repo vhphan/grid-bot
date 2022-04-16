@@ -26,7 +26,7 @@
             <q-splitter
                 v-model="splitterModelLeftVertical"
 
-                style="height: 90vh;"
+                style="height: 40vh;"
             >
               <template v-slot:before>
 
@@ -36,6 +36,7 @@
                     :pagination="{rowsPerPage: numOfRows}"
                     dense
                     dark
+                    :hide-bottom="true"
                 ></q-table>
 
               </template>
@@ -46,6 +47,7 @@
                     :pagination="{rowsPerPage: numOfRows}"
                     dense
                     dark
+                    :hide-bottom="true"
                 ></q-table>
 
               </template>
@@ -102,18 +104,20 @@
 
       <q-separator/>
 
-      <q-list
-          dense
-          class="q-ma-xs bg-black"
-          bordered
-          dark
-      >
-        <q-item-section class="text-h6">Bot Logs</q-item-section>
-        <q-separator dark/>
-        <q-item v-for="item in logList.slice(-numOfRows)">
-          {{ item }}
-        </q-item>
-      </q-list>
+      <div style="height: 390px; display: flex; flex-direction: column-reverse;" class="list scroll">
+        <q-list
+            dense
+            class="q-ma-xs bg-black"
+            bordered
+            dark
+        >
+          <q-item-section class="text-h6 bg-blue-9" style="position: sticky; top:0; z-index: 10;">Bot Logs</q-item-section>
+          <q-separator dark/>
+          <q-item v-for="item in logList.slice(-numOfRows)">
+            {{ item }}
+          </q-item>
+        </q-list>
+      </div>
 
     </template>
 

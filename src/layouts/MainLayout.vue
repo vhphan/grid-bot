@@ -9,7 +9,7 @@
           <q-avatar>
             <q-icon name="insights"/>
           </q-avatar>
-          Grid Bot Project: {{ symbol }}
+          Grid Bot: {{ symbol }}
         </q-toolbar-title>
 
         <q-tabs align="left">
