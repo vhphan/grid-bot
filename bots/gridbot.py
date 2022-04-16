@@ -169,7 +169,7 @@ class GridBot:
 
                     logger.info(f'Sleep for {CHECK_ORDERS_FREQUENCY} seconds')
                     time.sleep(CHECK_ORDERS_FREQUENCY)
-                    logger.info(f"current portfolio value: {self.get_portfolio_value()}")
+                    logger.info(f"current portfolio value: {round(self.get_portfolio_value(),3)} {QUOTE_SYMBOL}")
 
             for order_id in self.closed_order_ids:
                 # self.buy_orders = list(filter(lambda order: order['id'] != order_id, self.buy_orders))
