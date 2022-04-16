@@ -131,7 +131,8 @@ export const useAlpaca = function (symbol) {
 };
 
 export const useBinance = function (symbol) {
-    const tzOffset = (new Date()).getTimezoneOffset() * 60;
+    const tzOffset = (new Date()).getTimezoneOffset() * 60_000;
+
     const url = 'wss://stream.binance.com:9443';
     const streams = `ws/${symbol}@kline_5m/${symbol}@trade/${symbol}@depth@1000ms`;
     const quotes = ref([]);
@@ -156,7 +157,7 @@ export const useBinance = function (symbol) {
                     bars.value.push(bar);
                     if (bars.value.length > 1000) bars.value.shift();
 
-                    const timestamp = bar.t / 1000 - tzOffset;
+                    const timestamp = bar.t / 1000 ;
 
                     currentBar = {
                         time: timestamp,
