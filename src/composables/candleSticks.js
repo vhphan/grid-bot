@@ -7,12 +7,12 @@ async function barData(symbol, start, candleSeries, api) {
     if (api === 'binance') {
         const tzOffset = (new Date()).getTimezoneOffset() * 60_000;
 
-        const barsUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=5m&limit=500`;
+        const barsUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=5m&limit=1500`;
         const r = await fetch(barsUrl);
         const klines = await r.json();
         data = klines.map(k => {
             return {
-                time: (k[0] -tzOffset) / 1000,
+                time: (k[0] - tzOffset) / 1000,
                 open: k[1],
                 high: k[2],
                 low: k[3],
