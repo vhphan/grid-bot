@@ -19,6 +19,7 @@ config = dotenv_values(".env")
 
 NUM_BUY_GRID_LINES = int(config["NUM_BUY_GRID_LINES"])
 SYMBOL = config["SYMBOL"]
+QUOTE_SYMBOL = config["QUOTE_SYMBOL"]
 POSITION_SIZE = float(config["POSITION_SIZE"])
 GRID_SIZE = float(config["GRID_SIZE"])
 NUM_SELL_GRID_LINES = int(config["NUM_SELL_GRID_LINES"])
@@ -177,7 +178,7 @@ class GridBot:
                 self.sell_orders = [sell_order for sell_order in self.sell_orders if sell_order['id'] != order_id]
 
             if len(self.sell_orders) == 0:
-                logger.info(f"current portfolio value: {self.get_portfolio_value()}")
+                logger.info(f"current portfolio value: {round(self.get_portfolio_value(),3)} {QUOTE_SYMBOL}")
                 # sys.exit("stopping bot, nothing left to sell")
                 logger.info("stopping bot, nothing left to sell")
                 self.__exit__(0, 0, None)
