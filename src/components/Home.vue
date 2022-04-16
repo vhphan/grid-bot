@@ -4,12 +4,19 @@
       width="300"
       min-width="300"
       max-width="300"
-      style="background-color: #f0f0f0;">
+      style="background-color: #f0f0f0;"
+      separator-class="bg-primary"
+      separator-style="width: 3px;"
+  >
+
     <template v-slot:before>
+
       <q-splitter
           v-model="splitterModel"
           horizontal
           style="height: 100vh;"
+          separator-class="bg-primary"
+          separator-style="height: 3px;"
       >
 
 
@@ -111,7 +118,8 @@
             bordered
             dark
         >
-          <q-item-section class="text-h6 bg-blue-9" style="position: sticky; top:0; z-index: 10;">Bot Logs</q-item-section>
+          <q-item-section class="text-h6 bg-blue-9" style="position: sticky; top:0; z-index: 10;">Bot Logs
+          </q-item-section>
           <q-separator dark/>
           <q-item v-for="item in logList.slice(-numOfRows)">
             {{ item }}
