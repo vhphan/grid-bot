@@ -154,7 +154,9 @@ class GridBot:
                 for order in orders_list:
 
                     order = self.exchange.fetch_order(id=order['id'], symbol=SYMBOL)
+                    logger.info('fetched order: ' + str(order))
                     order_info = order['info']
+                    logger.info(f"Order info: {order_info}")
 
                     if order_info['status'] == CLOSED_ORDER_STATUS:
                         self.closed_orders.append(order_info)
