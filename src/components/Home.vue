@@ -7,6 +7,7 @@
       style="background-color: #f0f0f0;"
       separator-class="bg-primary"
       separator-style="width: 3px;"
+
   >
 
     <template v-slot:before>

@@ -163,7 +163,8 @@ class GridBot:
 
                         new_price = float(order_info['price']) + grid_size_multiplier * GRID_SIZE
                         logger.info(f"creating new limit {mode} order at {new_price}")
-                        new_order = self.exchange.create_limit_order(SYMBOL, mode, POSITION_SIZE, new_price)
+                        new_order_mode = 'buy' if mode == 'sell' else 'sell'
+                        new_order = self.exchange.create_limit_order(SYMBOL, new_order_mode, POSITION_SIZE, new_price)
                         orders_list.append(new_order)
 
                     logger.info(f'Sleep for {CHECK_ORDERS_FREQUENCY} seconds')
