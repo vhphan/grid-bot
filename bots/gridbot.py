@@ -135,7 +135,9 @@ class GridBot:
     def run_bot(self):
         self.create_initial_order()
         self.create_initial_grid_orders()
+        i = 0
         while True:
+            i += 1
             if self.ws:
                 # concatenate 3 order lists and send as jsonified string
                 self.ws.send(json.dumps(
@@ -171,7 +173,8 @@ class GridBot:
 
                     logger.info(f'Sleep for {CHECK_ORDERS_FREQUENCY} seconds')
                     time.sleep(CHECK_ORDERS_FREQUENCY)
-                    logger.info(f"current portfolio value: {round(self.get_portfolio_value(), 3)} {QUOTE_SYMBOL}")
+                    if i % 1000 == 0:
+                        self.log_performance()
 
             for order_id in self.closed_order_ids:
                 # self.buy_orders = list(filter(lambda order: order['id'] != order_id, self.buy_orders))
@@ -180,12 +183,15 @@ class GridBot:
                 self.sell_orders = [sell_order for sell_order in self.sell_orders if sell_order['id'] != order_id]
 
             if len(self.sell_orders) == 0:
-                logger.info(f"start portfolio value: {round(self.initial_portfolio_value, 3)} {QUOTE_SYMBOL}")
-                logger.info(f"current portfolio value: {round(self.get_portfolio_value(), 3)} {QUOTE_SYMBOL}")
-                logger.info(f"profit: {round(self.get_portfolio_value() - self.initial_portfolio_value, 3)} {QUOTE_SYMBOL}")
+                self.log_performance()
                 # sys.exit("stopping bot, nothing left to sell")
                 logger.info("stopping bot, nothing left to sell")
                 self.__exit__(0, 0, None)
+
+    def log_performance(self):
+        logger.info(f"start portfolio value: {round(self.initial_portfolio_value, 3)} {QUOTE_SYMBOL}")
+        logger.info(f"current portfolio value: {round(self.get_portfolio_value(), 3)} {QUOTE_SYMBOL}")
+        logger.info(f"profit: {round(self.get_portfolio_value() - self.initial_portfolio_value, 3)} {QUOTE_SYMBOL}")
 
 
 @retry(tries=3, delay=CHECK_ORDERS_FREQUENCY, logger=logger)
