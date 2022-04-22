@@ -171,7 +171,7 @@ class GridBot:
 
                     logger.info(f'Sleep for {CHECK_ORDERS_FREQUENCY} seconds')
                     time.sleep(CHECK_ORDERS_FREQUENCY)
-                    logger.info(f"current portfolio value: {round(self.get_portfolio_value(),3)} {QUOTE_SYMBOL}")
+                    logger.info(f"current portfolio value: {round(self.get_portfolio_value(), 3)} {QUOTE_SYMBOL}")
 
             for order_id in self.closed_order_ids:
                 # self.buy_orders = list(filter(lambda order: order['id'] != order_id, self.buy_orders))
@@ -180,7 +180,9 @@ class GridBot:
                 self.sell_orders = [sell_order for sell_order in self.sell_orders if sell_order['id'] != order_id]
 
             if len(self.sell_orders) == 0:
-                logger.info(f"current portfolio value: {round(self.get_portfolio_value(),3)} {QUOTE_SYMBOL}")
+                logger.info(f"start portfolio value: {round(self.initial_portfolio_value, 3)} {QUOTE_SYMBOL}")
+                logger.info(f"current portfolio value: {round(self.get_portfolio_value(), 3)} {QUOTE_SYMBOL}")
+                logger.info(f"profit: {round(self.get_portfolio_value() - self.initial_portfolio_value, 3)} {QUOTE_SYMBOL}")
                 # sys.exit("stopping bot, nothing left to sell")
                 logger.info("stopping bot, nothing left to sell")
                 self.__exit__(0, 0, None)
@@ -194,8 +196,8 @@ def fetch_order_info(self, order):
 if __name__ == '__main__':
     web_socket_url = 'ws://localhost:9001'
     with GridBot(web_socket_url=web_socket_url) as bot:
-        bot.run_bot()
-
-
-
-
+        try:
+            bot.run_bot()
+        except Exception as e:
+            logger.error(f"Error: {str(e)}")
+            raise e
