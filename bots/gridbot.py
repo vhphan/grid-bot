@@ -133,17 +133,22 @@ class GridBot:
         return kline
 
     def run_bot(self):
+
         self.create_initial_order()
         self.create_initial_grid_orders()
         i = 0
+
         while True:
             i += 1
             if self.ws:
                 # concatenate 3 order lists and send as jsonified string
+                all_orders = {'data': self.buy_orders + self.sell_orders + self.closed_orders,
+                              'type': 'orders'}
                 self.ws.send(json.dumps(
-                    {'data': self.buy_orders + self.sell_orders + self.closed_orders,
-                     'type': 'orders'})
-                )
+                    all_orders
+                ))
+                logger.info(all_orders)
+
                 log_lines = read_last_n_lines(self.log_filename, 20)
                 print(log_lines)
                 self.ws.send(json.dumps({'data': log_lines, 'type': 'logs'}))
@@ -193,10 +198,9 @@ class GridBot:
         logger.info(f"current portfolio value: {round(self.get_portfolio_value(), 3)} {QUOTE_SYMBOL}")
         logger.info(f"profit: {round(self.get_portfolio_value() - self.initial_portfolio_value, 3)} {QUOTE_SYMBOL}")
 
-
-@retry(tries=3, delay=CHECK_ORDERS_FREQUENCY, logger=logger)
-def fetch_order_info(self, order):
-    return self.exchange.fetch_order(order['id'], config['SYMBOL'])
+    @retry(tries=3, delay=CHECK_ORDERS_FREQUENCY, logger=logger)
+    def fetch_order_info(self, order):
+        return self.exchange.fetch_order(order['id'], config['SYMBOL'])
 
 
 if __name__ == '__main__':
